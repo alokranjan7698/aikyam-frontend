@@ -23,11 +23,16 @@ const Signup = () => {
 
     createUserWithEmailAndPassword(auth, userSignUp.email, userSignUp.password)
       .then((res) => {
-        alert("successfully signup up");
+        sessionStorage.setItem("Auth Token", res._tokenResponse.refreshToken);
         navigate("/details");
       })
-      .catch((err) => {
-        console.log(err.message);
+      .catch((error) => {
+        if (error.code === "auth/weak-password") {
+          toast.error("Password should be at least 6 characters");
+        }
+        if (error.code === "auth/email-already-in-use") {
+          toast.error("Email Already in Use");
+        }
       });
   };
 

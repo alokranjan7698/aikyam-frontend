@@ -1,50 +1,81 @@
-import React, { useState } from 'react'
-import { Link, useNavigate } from "react-router-dom";
-import { app } from "../../utils/firebase/firebase.config";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { signInWithGooglePopup } from "../../utils/firebase/firebase.config";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../../pages/Login/Login.css";
 
 import "react-toastify/dist/ReactToastify.css";
-import { toast } from "react-toastify";
-
 
 const AlumniRegister = () => {
   const navigate = useNavigate();
   const [userRegister, setUserRegister] = useState({
     name: "",
     email: "",
-    password: "",
   });
-  const { name, email, password } = userRegister;
-  const auth = getAuth();
-  const handleRegisterSubmit = (e) => {
-    e.preventDefault();
-    // console.log(userRegister);   
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((response) => {
-        navigate("/");
-        sessionStorage.setItem(
-          "Auth Token",
-          response._tokenResponse.refreshToken
-        );
-      })
-      .catch((error) => {
-        if (error.code === 'auth/weak-password') {
-          toast.error('Password should be at least 6 characters');
+
+  const postImg = async (pic) => {
+    try {
+      const data = new FormData();
+      data.append("upload_preset", "alumnipics");
+      data.append("file", pic);
+
+      const res = await fetch(
+        "https://api.cloudinary.com/v1_1/alokranjanjoshi07567/image/upload",
+        {
+          method: "POST",
+          body: data,
         }
-        if (error.code === 'auth/email-already-in-use') {
-          toast.error('Email Already in Use');
-        }
-      });
+      );
+      const resData = await res.json();
+      const picUrl = resData.url.toString();
+      console.log("pic url " + picUrl);
+      setUserRegister({ ...userRegister, pic: picUrl });
+    } catch (err) {
+      console.log(err);
+    }
   };
+
+  const handleRegisterSubmit = async (e) => {
+    e.preventDefault();
+    console.log("user register = " + userRegister);
+    const {
+      name,
+      email,
+      pic,
+      gender,
+      mobile,
+      institution,
+      pbatch,
+      branch,
+      currentPosition,
+      location,
+    } = userRegister;
+    try {
+      const res = await fetch("http://localhost:9000/alumni/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          pic,
+          gender,
+          mobile,
+          institution,
+          pbatch,
+          branch,
+          currentPosition,
+          location,
+        }),
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   const handleRegisterChange = (e) => {
     setUserRegister({ ...userRegister, [e.target.name]: e.target.value });
   };
-  const handlesignupwithGoogle = () => {
-    signInWithGooglePopup();
-    navigate("/");
-  }
+
   return (
     <div>
       <form onSubmit={handleRegisterSubmit}>
@@ -68,16 +99,6 @@ const AlumniRegister = () => {
             onChange={handleRegisterChange}
           />
         </div>
-        <div className="login-input-box">
-          <label>Enter your Password</label>
-          <input
-            type="password"
-            required
-            name="password"
-            value={userRegister.password}
-            onChange={handleRegisterChange}
-          />
-        </div>
 
         <div className="login-input-box">
           <label>Enter your Mobile Number</label>
@@ -92,22 +113,34 @@ const AlumniRegister = () => {
 
         <div className="login-input-box">
           <label>Enter your Gender</label>
-          <select style={{ height: '40px' }}
-            name='branch'
+          <select
+            style={{ height: "40px" }}
+            name="gender"
             required
-            value={userRegister.branch}
-            onChange={handleRegisterChange}>
+            value={userRegister.gender}
+            onChange={handleRegisterChange}
+          >
             <option>Select Gender</option>
             <option value="male">Male</option>
             <option value="female">Female</option>
           </select>
+        </div>
 
+        <div className="login-input-box">
+          <label>Enter your Mobile Number</label>
+          <input
+            type="text"
+            required
+            name="institution"
+            value={userRegister.institution}
+            onChange={handleRegisterChange}
+          />
         </div>
 
         <div className="login-input-box">
           <label>Enter your Passout Batch</label>
           <input
-            type="date"
+            type="number"
             required
             name="pbatch"
             value={userRegister.pbatch}
@@ -116,11 +149,13 @@ const AlumniRegister = () => {
         </div>
         <div className="login-input-box">
           <label>Enter your Branch</label>
-          <select style={{ height: '40px' }}
-            name='branch'
+          <select
+            style={{ height: "40px" }}
+            name="branch"
             required
             value={userRegister.branch}
-            onChange={handleRegisterChange}>
+            onChange={handleRegisterChange}
+          >
             <option>Select Branch</option>
             <option value="CSE">CSE</option>
             <option value="IT">IT</option>
@@ -135,8 +170,8 @@ const AlumniRegister = () => {
           <input
             type="text"
             required
-            name="job"
-            value={userRegister.job}
+            name="currentPosition"
+            value={userRegister.currentPosition}
             onChange={handleRegisterChange}
           />
         </div>
@@ -146,30 +181,27 @@ const AlumniRegister = () => {
           <input
             type="text"
             required
-            name="loc"
-            value={userRegister.loc}
+            name="location"
+            value={userRegister.location}
             onChange={handleRegisterChange}
           />
         </div>
-
+        <div className="login-input-box">
+          <label>Image</label>
+          <input
+            type="file"
+            required
+            name="location"
+            onChange={(e) => postImg(e.target.files[0])}
+          />
+        </div>
 
         <div className="login-input-box">
-          <button>Signup</button>
+          <button>Submit</button>
         </div>
       </form>
-      <div className="login-input-box">
-        <button onClick={handlesignupwithGoogle}>Sign up with Google</button>
-      </div>
-      <div className="login-input-box" style={{ textAlign: "center" }}>
-        <p>
-          Already have an account !{" "}
-          <span className="render-to-signup">
-            <Link to="/login">Sign in</Link>
-          </span>
-        </p>
-      </div>
     </div>
-  )
-}
+  );
+};
 
-export default AlumniRegister
+export default AlumniRegister;

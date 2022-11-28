@@ -1,12 +1,9 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { app } from "../../utils/firebase/firebase.config";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { signInWithGooglePopup } from "../../utils/firebase/firebase.config";
 import "../../pages/Login/Login.css";
 
 import "react-toastify/dist/ReactToastify.css";
-import { toast } from "react-toastify";
+import axios from "axios";
 
 const StudentRegister = () => {
   const navigate = useNavigate();
@@ -14,35 +11,49 @@ const StudentRegister = () => {
     name: "",
     email: "",
   });
-  const { name, email, password } = userRegister;
-  const auth = getAuth();
-  const handleRegisterSubmit = (e) => {
+
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    // console.log(userRegister);
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((response) => {
-        navigate("/");
-        sessionStorage.setItem(
-          "Auth Token",
-          response._tokenResponse.refreshToken
-        );
-      })
-      .catch((error) => {
-        if (error.code === "auth/weak-password") {
-          toast.error("Password should be at least 6 characters");
-        }
-        if (error.code === "auth/email-already-in-use") {
-          toast.error("Email Already in Use");
-        }
+    const {
+      name,
+      email,
+      gender,
+      mobile,
+      institution,
+      qualification,
+      pyear,
+      branch,
+      regdno,
+    } = userRegister;
+    try {
+      const res = await fetch("http://localhost:9000/student/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          gender,
+          mobile,
+          institution,
+          qualification,
+          pyear,
+          branch,
+          regdno,
+        }),
       });
+      console.log("res =   " + res);
+      const data = res.json();
+    } catch (err) {
+      console.log(err);
+    }
   };
+
   const handleRegisterChange = (e) => {
     setUserRegister({ ...userRegister, [e.target.name]: e.target.value });
   };
-  const handlesignupwithGoogle = () => {
-    signInWithGooglePopup();
-    navigate("/");
-  };
+
   return (
     <div>
       <form onSubmit={handleRegisterSubmit}>
@@ -83,9 +94,9 @@ const StudentRegister = () => {
           <label>Enter your Gender</label>
           <select
             style={{ height: "40px" }}
-            name="branch"
+            name="gender"
             required
-            value={userRegister.branch}
+            value={userRegister.gender}
             onChange={handleRegisterChange}
           >
             <option>Select Gender</option>
@@ -149,7 +160,7 @@ const StudentRegister = () => {
         <div className="login-input-box">
           <label>Enter your Passout Year</label>
           <input
-            type="date"
+            type="number"
             required
             name="pyear"
             value={userRegister.pyear}

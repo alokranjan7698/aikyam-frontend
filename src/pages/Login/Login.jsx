@@ -25,7 +25,6 @@ const Login = () => {
   });
   const handleloginUser = (e) => {
     e.preventDefault();
-    // console.log(userlogin);
     signInWithEmailAndPassword(auth, userlogin.email, userlogin.password)
       .then((response) => {
         navigate("/");
